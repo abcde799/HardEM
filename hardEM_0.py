@@ -173,7 +173,7 @@ def HEM_predictions(model_weights, df, covariates):
         
     predictions_float = 1-sigmoid(model_weights[0]*intercept+np.dot(table, nonintercept_weights)) 
 
-    predictions = np.rint(predictions_float)
+    predictions = {'pred': np.rint(predictions_float), 'prob': predictions_float}
 
     return predictions
 

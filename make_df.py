@@ -5,7 +5,7 @@
 
 import numpy as np
 import pandas as pd
-
+from hardEM_0 import HEM_predictions
 
 
 
@@ -18,54 +18,7 @@ def ranarray(mu, sigma, length):
     return s
 
 
-          
-
-
-
-def censoring_indicator(cens_prop, n_patients):
-    
-    '''Returns a numpy array having n_patients entries whose censored proportion (label 0) is cens_prop'''
-    
-    p_0 = 1-cens_prop
-    
-    return np.random.binomial(1, p_0, n_patients)
-
-
-
-
- 
-
-def cure_label(delta, cens_prop, cured_prop):
-    
-    '''If delta_i = 1 take cure_i = 1 and if delta_i = 0, take cure_i = Bin(1-cured_prop/cens_prop).'''
-    
-    if delta == 1:
-        
-        return 1
-    
-    else:
-        
-        return np.random.binomial(1, 1-cured_prop/cens_prop)   
-
-
-
-
-
-def cured_cens_df(cens_prop, cured_prop, n_patients):
-    
-    '''Create a pandas dataframe with censoring indicator column and cured label column having n_patients rows and with the relevant
-    indicated cenored proportion and cured proportion.'''
-
-    new_df = pd.DataFrame({'censoring_indicator': censoring_indicator(cens_prop, n_patients) })
-    
-    cure_label_arr = lambda x : cure_label(x, cens_prop, cured_prop)
-    
-    new_df['cure_label'] = new_df.censoring_indicator.apply(cure_label_arr)
-    
-    return new_df
-
-
-
+         
 
 
 def add_covariate(df, mu, sigma, n_patients, string):
@@ -99,18 +52,17 @@ def make_cov_df(covariates, dist, n_patients):
    
 
 
-def create_df(covariates, dist, cens_prop, cured_prop, n_patients):
-
-    '''Make a dataframe by specifying list of strings for covariate names, list of lists each containing mu and sigma for 
-    corresponding covariate column, a column indicating who is censored at the rate of cens_prop from total dataset, and 
-    a column containing cured labels at the cured_prop rate. Data set has n_patients rows'''
-
+def add_cure_label(test_model_weights, df, covariates):
     
-    cov_df = make_cov_df(covariates, dist, n_patients)
-    cured_cens_df_ = cured_cens_df(cens_prop, cured_prop, n_patients)
-    new_df = pd.concat([cov_df, cured_cens_df_], axis=1)
-                         
-    return new_df
+    '''Uses function from hardEM_0 module to compute a probability rule for being cured, according to test weights.'''
+    
+    cure_label_dic = HEM_predictions(test_model_weights, df, covariates)
+    
+    cure_label = cure_label_dic['pred']
+    
+    df['cure_label'] = cure_label
+    
+    return df
 
 
 def add_intercept(df):
@@ -122,6 +74,50 @@ def add_intercept(df):
     df['int'] = new_col
     
     return df
+
+def censoring_indicator(cure_label, prob_cens_given_not_cured):
+    
+    '''Adds censoring labels. If you are cured you must be censored and if you are not cured, then you will
+    be censored according to given probability. Note that censored is labeled as 0 and not 1.'''
+    
+    if cure_label==0:
+        
+        return 0
+    
+    elif cure_label==1:
+        
+        return 1-np.random.binomial(1, prob_cens_given_not_cured)
+    
+    
+    
+def add_censoring_indicator(df, prob_cens_given_not_cured):
+    
+    '''Adds censoring indicator column to datadrame.'''
+       
+    cens_ind_arr = lambda x : censoring_indicator(x, prob_cens_given_not_cured)
+    
+    df['censoring_indicator'] = df.cure_label.apply(cens_ind_arr)
+    
+    return df    
+    
+
+
+def create_df(covariates, dist, n_patients, test_model_weights, prob_cens_given_not_cured):
+    
+    '''Puts together the above functions to make a dataframe having the prescribed inputs.'''
+    
+    foo = make_cov_df(covariates, dist, n_patients)
+    
+    foo = add_cure_label(test_model_weights, foo, covariates)
+    
+    foo = add_intercept(foo)
+    
+    foo = add_censoring_indicator(foo, prob_cens_given_not_cured)
+    
+    return foo
+    
+    
+    
 
 
 def make_inputs(df, indicator, cols):
