@@ -67,13 +67,13 @@ def HEM_fit(censored_inputs, noncensored_inputs, C, maxiter, initialize):
 
 
     def constraint1(param):
-        # Taking into account lower bnd for I_i(I_i-1) for the censored rows
+        # Taking into account lower bound for I_i(I_i-1) for the censored rows. Default lower bnd taken as 0.001.
         weights, unknownlabels = param[0:len(censored_inputs[0])], param[len(censored_inputs[0]):]
     
         return unknownlabels*(unknownlabels-1)+0.001 #unknownlabels
 
     def constraint2(param):
-        # Taking into account upper bnd for I_i(I_i-1) for the censored rows
+        # Taking into account upper bound for I_i(I_i-1) for the censored rows. Default upper bound taken as 0.001.
         weights, unknownlabels = param[0:len(censored_inputs[0])], param[len(censored_inputs[0]):]
     
         return 0.001-unknownlabels*(unknownlabels-1) #-unknownlabels
@@ -92,18 +92,12 @@ def HEM_fit(censored_inputs, noncensored_inputs, C, maxiter, initialize):
     if initialize == 'censoring_rate':
     #Use censoring rate to initialize the minimization
 
-        p = 1-n_cens/n_rows  # number of trials, probability of each trial
+        p = 1-n_cens/n_rows  # probability of getting cured (lanubel 0!) is the censored rate.
         guess_unknown_labels = np.random.binomial(1, p, n_cens)
         # result of flipping a coin once n_cens times.
 
         
         guess = np.concatenate((guess_weights, guess_unknown_labels), axis=None)
-
-        #options0 = {'maxiter': maxiter}
-
-        #minimizer_kwargs0 = {'method':'SLSQP', 'jac':training_gradient, 'constraints':cons, 'options':options0}
-
-        #res = basinhopping(training_loss, guess, minimizer_kwargs=minimizer_kwargs0)
 
         res = minimize(training_loss, guess, method='SLSQP', jac=training_gradient, constraints=cons, options={'maxiter': maxiter})
 
