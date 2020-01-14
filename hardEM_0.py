@@ -12,6 +12,7 @@ from sklearn.cluster import KMeans
 
 
 
+
 def sigmoid(x):
     return 0.5 * (np.tanh(x / 2.) + 1)
 
@@ -174,8 +175,14 @@ def HEM_predictions(model_weights, df, covariates):
 
 
 
-
+def HEM_labels_fit(censored_inputs, noncensored_inputs, C, maxiter, initialize):
     
+    
+    fit0 = HEM_fit(censored_inputs, noncensored_inputs, C, maxiter, initialize)
+
+    unknown_cure_labels = fit0['unknown_cure_labels']
+    
+    return unknown_cure_labels  
 
 
 

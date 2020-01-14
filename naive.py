@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_auc_score
 from make_df import create_df, make_inputs
 from sklearn.cluster import KMeans
-from hardEM_0 import vswap, dist
+from hardEM_0 import vswap, dist, HEM_labels_fit
 
 
  
@@ -104,8 +104,34 @@ def naive_fit(censored_inputs, noncensored_inputs, initialize):
         
         return fit
     
+    elif initialize == 'use_HardEM':
+    #Use HardEM algorithm to generate the censored cure labels
     
-    else: raise ValueError("Need initialize parameter to be chosen as either 'use_clustering' or 'censoring_rate'")
+        guess_unknown_labels = HEM_labels_fit(censored_inputs, noncensored_inputs, 0.5, 1000, 'use_clustering')
+    
+        labels = np.concatenate((guess_unknown_labels, noncens_labels), axis=None)
+        
+        clf = LogisticRegression(random_state=0).fit(total_inputs, labels)
+    
+        nonintercept_weights = np.ndarray.flatten(clf.coef_)
+    
+        intercept = clf.intercept_
+    
+        weights = np.concatenate((intercept, nonintercept_weights))
+    
+        predictions = clf.predict(total_inputs)
+    
+        prob_not_cured = clf.predict_proba(total_inputs)[:,1]
+    
+    
+        fit = {'pred':predictions, 'prob':prob_not_cured}
+        
+        
+        return fit
+       
+    
+    
+    else: raise ValueError("Need initialize parameter to be chosen as either 'use_clustering', 'censoring_rate', or 'use_HardEM'")
 
         
         
