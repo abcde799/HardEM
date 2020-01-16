@@ -145,7 +145,52 @@ def HEM_fit(censored_inputs, noncensored_inputs, C, maxiter, initialize):
         return fit
     
     
-    else: raise ValueError("Need initialize parameter to be chosen as either 'use_clustering' or 'censoring_rate'")
+    
+    elif initialize == 'use_random':
+    #Iterate many random initializations for unknown labels and take the one giving lowest objective 
+    
+    
+        results = {}
+        values =  np.array([])
+        for p in np.random.uniform(0.01,0.9,50): 
+            
+            guess_unknown_labels = np.random.binomial(1, p, n_cens)
+            # result of flipping a coin once n_cens times.
+        
+            guess = np.concatenate((guess_weights, guess_unknown_labels), axis=None)
+        
+            res = minimize(training_loss, guess, method='SLSQP', jac=training_gradient, constraints=cons, options={'maxiter': maxiter})
+
+            model_weights = res.x[0:len(censored_inputs[0])]
+            
+            value = res.fun
+        
+            unknown = res.x[len(censored_inputs[0]):]
+            
+            unknown_cure_labels = np.rint(unknown)
+            
+            values = np.concatenate((values, value), axis=None)
+            
+            results[value] = [model_weights, unknown_cure_labels]
+            
+            
+        maxim = values.max()    
+        minim = values.min()
+           
+    
+        optimal_model_weights = (results[minim])[0]
+        
+        optimal_model_labels = (results[minim])[1]
+            
+        fit = {'model_weights':optimal_model_weights, 'unknown_cure_labels':optimal_model_labels, 'minvalue': minim, 'maxvalue': maxim}
+        
+        return fit
+            
+    
+    
+    
+    
+    else: raise ValueError("Need initialize parameter to be chosen as either 'use_clustering' or 'censoring_rate', or 'use_random' ")
 
         
         
@@ -154,7 +199,7 @@ def HEM_fit(censored_inputs, noncensored_inputs, C, maxiter, initialize):
 
 def HEM_predictions(model_weights, df, covariates):
     
-    '''Gives a prediction column by rounding 1-p where p is the probablity of being cured. This is because the cure lable is 0 and 
+    '''Gives a prediction column by rounding 1-p where p is the probablity of being cured. This is because the cure label is 0 and 
     the not cured label is 1. The df refers to the original datarame and covariates is the list of covariates from the dataframe
     and in the same order, and similarly for model_weights.'''
     
@@ -166,7 +211,7 @@ def HEM_predictions(model_weights, df, covariates):
         
     nonintercept_weights = model_weights[1:]
         
-    predictions_float = 1-sigmoid(model_weights[0]*intercept+np.dot(table, nonintercept_weights)) 
+    predictions_float = 1-sigmoid(model_weights[0]*intercept+np.dot(table, nonintercept_weights)) #This is prob of not cured!
 
     predictions = {'pred': np.rint(predictions_float), 'prob': predictions_float}
 
