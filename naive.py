@@ -107,7 +107,7 @@ def naive_fit(censored_inputs, noncensored_inputs, initialize):
     elif initialize == 'use_HardEM':
     #Use HardEM algorithm to generate the censored cure labels
     
-        guess_unknown_labels = HEM_labels_fit(censored_inputs, noncensored_inputs, 0.5, 1000, 'use_clustering')
+        guess_unknown_labels = HEM_labels_fit(censored_inputs, noncensored_inputs, 0.5, 1000, 'use_random')
     
         labels = np.concatenate((guess_unknown_labels, noncens_labels), axis=None)
         

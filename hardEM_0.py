@@ -152,7 +152,7 @@ def HEM_fit(censored_inputs, noncensored_inputs, C, maxiter, initialize):
     
         results = {}
         values =  np.array([])
-        for p in np.random.uniform(0.01,0.9,50): 
+        for p in np.random.uniform(0.1,0.9,50): 
             
             guess_unknown_labels = np.random.binomial(1, p, n_cens)
             # result of flipping a coin once n_cens times.
