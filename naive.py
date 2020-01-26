@@ -128,10 +128,41 @@ def naive_fit(censored_inputs, noncensored_inputs, initialize):
         
         
         return fit
+    
+    elif initialize == 'fifty_fifty':
+    #Use censoring rate to initialize the minimization
+    
+        #Use censoring rate to fill in missing values. 
+
+        p = 0.5  # probability of getting cured (label 0!) is the 0.5.
+        guess_unknown_labels = np.random.binomial(1, p, n_cens)
+        # result of flipping a coin once n_cens times.
+        
+        labels = np.concatenate((guess_unknown_labels, noncens_labels), axis=None)
+        
+        clf = LogisticRegression(random_state=0).fit(total_inputs, labels)
+    
+        nonintercept_weights = np.ndarray.flatten(clf.coef_)
+    
+        intercept = clf.intercept_
+    
+        weights = np.concatenate((intercept, nonintercept_weights))
+    
+        predictions = clf.predict(total_inputs)
+    
+        prob_not_cured = clf.predict_proba(total_inputs)[:,1]
+    
+        
+    
+    
+        fit = {'pred':predictions, 'prob':prob_not_cured}
+       
+        
+        return fit
        
     
     
-    else: raise ValueError("Need initialize parameter to be chosen as either 'use_clustering', 'censoring_rate', or 'use_HardEM'")
+    else: raise ValueError("Need initialize parameter to be chosen as either 'use_clustering', 'censoring_rate', 'use_HardEM', or use 'fifty_fifty'")
 
         
         
