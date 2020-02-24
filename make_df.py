@@ -1,4 +1,9 @@
-#This module consists of functions which together genrate testing datasets with specified covarites, as well as censored and cured proportions. The covariates are drawn from user specified normal distributions. The datasets are intended for testing a hard EM algorithm arising from survival analysis in which the cured population is not known. 
+'''
+This module consists of functions which generate testing datasets with specified covarites, as well as censored and cured proportions. The 
+covariates are drawn from user specified normal distributions. The datasets are intended for testing a hard EM algorithm arising from 
+survival analysis in which the cured population is not known.
+
+'''
 
 
 
@@ -23,7 +28,7 @@ def ranarray(mu, sigma, length):
 
 def add_covariate(df, mu, sigma, n_patients, string):
     
-    '''Add a covariate to a dataframe coming from a normal distribution with the given parameters and n_patient rows.'''
+    '''Add a covariate to a dataframe coming from a normal distribution with the given parameters and n_patients rows.'''
     
     df[string] = ranarray(mu, sigma, n_patients)
     

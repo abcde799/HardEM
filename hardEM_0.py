@@ -1,12 +1,19 @@
-'''This is a Hard EM algorithm intended for a mixture model arising from survival analysis. More precisely, this is for situations when we have a cured subpopulation in our survival analysis dataset, but we do not know who is cured. In order to predict the population survival function, we need to know who is cured and instead of using the usual (soft) EM algorithm to predict who is cured via logistic regression, we use our Hard EM algorithm. The difference between the latter two is that our version assigns actual (hard) labels which indicate whether a patient is cured to the censored rows, while the soft EM assigns a probability distribution instead. Clearly, any patient belonging to a noncensored rows is not cured.'''
+'''
+This is a Hard EM algorithm intended for a mixture model arising from survival analysis. It is for situations when we 
+have a cured subpopulation in our survival analysis dataset, but we do not know who is cured. In order to predict the survival 
+function, we need to know who is cured, and instead of using the usual (soft) EM algorithm to predict who is cured via logistic regression, 
+we use our Hard EM algorithm. The difference between the latter two is that our version assigns actual (hard) labels which indicate whether 
+a patient is cured to the censored rows, while the soft EM assigns a probability distribution instead. Clearly, any patient belonging to a 
+noncensored row is not cured. It should be noted that the 'HEM_fit' and 'training_loss' functions were inspired by the code from the 
+autograd github repo: https://github.com/HIPS/autograd/blob/master/examples/logistic_regression.py. 
+
+'''
 
 import numpy as np
 from scipy.optimize import minimize
-from scipy.optimize import basinhopping
 import autograd.numpy as np
 from autograd import grad, jacobian, hessian
 import pandas as pd
-import autograd.numpy as np
 from autograd import grad
 from sklearn.cluster import KMeans
 
@@ -43,8 +50,45 @@ def prob(weights, inputs):
 
 def HEM_fit(censored_inputs, noncensored_inputs, C, maxiter, initialize):
     
-    '''This function implements the algorithm by minimizing the training loss. To initialize the minimization, which is done using the constrained SLSQP method, we need to choose an initial guess for both the unknown cure labels for the censored rows, and the covariate weights. If the option 'censoring_rate' is selected, then we initialize by assuming the probability of being cured is the censoring rate, and use this to generate cure labels for the censored rows. Otherwise, if 'use_clustering' is selected then a single cluster is created from the noncensored rows, and two clusters are created from the censored rows. By comparing the distance of the two censored cluster centers to the noncensored cluster center, cure labels are assigned to the censored rows. Furthermore, the covraiate weights are initialized at random from a unifrom distribution.
-'''
+    '''
+    This function implements the algorithm by minimizing the training loss. To initialize the minimization, which is done using the 
+    constrained SLSQP method, we need to choose an initial guess for both the unknown cure labels for the censored rows, and the covariate 
+    weights. 
+    
+    
+    Parameters:
+    
+    ----------------------------
+    
+    censored_inputs: A numpy array of shape (n_samples, n_covariates+1), containing the censored rows, each of which begins with a '1', 
+    accounting for our intercept term. E.g. array([[1,0.2,0.3], [1,0.5,0.6]]) has two samples and two covariates.
+    
+    noncensored_inputs: Same as above except these represent the noncensored rows. The number of covariates is the same as above, but we
+    could have a different number of samples. 
+    
+    initialize: This is how we choose our initial guesses for the SLSQP minimization algorithm. The covraiate weights are initialized at 
+    random from a unifrom distribution. As for the cure labels, if the option 'censoring_rate' is selected, then we initialize by assuming 
+    the probability of being cured is the censoring rate, and use this to generate an initial guess for cure labels for the censored rows. 
+    Otherwise, if 'use_clustering' is selected then a single cluster is created from the noncensored rows, and two clusters are created 
+    from the censored rows. By comparing the distance of the two censored cluster centers to the noncensored cluster center, cure labels 
+    are assigned to the censored rows, for our initial guess. Since the problem is nonconvex, the first two initializations typically lead 
+    to solutions close to the initial guess. To overcome this problem, a third option is used by selecting 'use_random', which tries fifty 
+    guesses for the unknown cure labels, taken at random from a uniform distribution, then chooses the output weights and labels 
+    corresponding to the guess giving the lowest objective.   
+    
+    C: The strength of the quadratic regularization term (0.5*w^2) on the non-intercept model covariate weights.
+    
+    maxiter: maximum number of iterations for SLSQP method. Typically, set to 1000.
+    
+    
+    Returns
+    ----------------------------------------
+    
+    The output is a dictionary containing two keys: (i) 'model_weights', whose value is a array containing the covariate weights, and (ii) 
+    'unknown_cure_labels', which is an array of final outputted cure labels for the censored rows, in the order they were fed into the
+    algorithm.
+    
+    '''
     n_noncens = len(noncensored_inputs)
     n_cens = len(censored_inputs)
     n_rows = n_noncens+n_cens
@@ -222,6 +266,10 @@ def HEM_predictions(model_weights, df, covariates):
 
 def HEM_labels_fit(censored_inputs, noncensored_inputs, C, maxiter, initialize):
     
+    '''
+    This is the function we use to import the missing cure labels outputted by the 'HEM_fit' function using the selected 'initialize'
+    parameter into naive_fit, which is in the naive.py module. 
+    '''
     
     fit0 = HEM_fit(censored_inputs, noncensored_inputs, C, maxiter, initialize)
 
