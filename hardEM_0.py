@@ -7,6 +7,15 @@ a patient is cured to the censored rows, while the soft EM assigns a probability
 noncensored row is not cured. It should be noted that the 'HEM_fit' and 'training_loss' functions were inspired by the code from the 
 autograd github repo: https://github.com/HIPS/autograd/blob/master/examples/logistic_regression.py. 
 
+This algorithm was the result of a collboration with Nemanja Kosovalic and Sandip Barui from the Department of Mathematics and Statistics,
+at the University of South Alabama.
+
+If you have questions please contact:
+
+Nemanja Kosovalic 
+
+n.kosovalic@gmail.com  
+
 '''
 
 import numpy as np
