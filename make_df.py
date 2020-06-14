@@ -69,6 +69,21 @@ def add_cure_label(test_model_weights, df, covariates):
     
     return df
 
+#Noscar:
+def add_nscar_cens_indicator(nscar_weights, df, covariates):
+    
+    '''Uses function from hardEM_0 module to compute a probability rule for being censored according to nscar_weights, which 
+    includes a weight for the intercept term. nscar stands for 'not selected completely at random'. This column is a helper column
+    and will not be included in the final dataframe.'''
+    
+    nscar_dic = HEM_predictions(nscar_weights, df, covariates)
+    
+    nscar_cens_label = nscar_dic['pred']
+    
+    df['nscar_cens_label'] = nscar_cens_label
+    
+    return df
+
 
 def add_intercept(df):
     
@@ -92,8 +107,8 @@ def censoring_indicator(cure_label, prob_cens_given_not_cured):
     elif cure_label==1:
         
         return 1-np.random.binomial(1, prob_cens_given_not_cured)
-    
-    
+
+
     
 def add_censoring_indicator(df, prob_cens_given_not_cured):
     
@@ -102,6 +117,30 @@ def add_censoring_indicator(df, prob_cens_given_not_cured):
     cens_ind_arr = lambda x : censoring_indicator(x, prob_cens_given_not_cured)
     
     df['censoring_indicator'] = df.cure_label.apply(cens_ind_arr)
+    
+    return df 
+
+#Noscar:
+
+def aux(col1,col2):
+    
+    '''Helper function used for adding no scar censoring indicator column. If person is cured, then they must be censored, otherwise
+    if they are not cured, then they are censored according to probability coming from the relevant column.'''
+    
+    if col1==0:
+        return 0
+    else:
+        return col2
+
+#Noscar:
+
+def add_nscar_censoring_indicator(df):
+    
+    '''Adds no scar censoring indicator column to datadrame, using aux helper function.'''
+    
+    df['nscar_censoring_indicator'] = df.apply(lambda x: aux(x.cure_label, x.nscar_cens_label), axis=1)
+       
+    
     
     return df    
     
@@ -122,7 +161,24 @@ def create_df(covariates, dist, n_patients, test_model_weights, prob_cens_given_
     return foo
     
     
+#Noscar:
+
+def create_nscar_df(covariates, dist, n_patients, test_model_weights, nscar_weights):
     
+    '''Puts together the above functions to make a dataframe having the prescribed inputs, under no scar labelling 
+    assumption.'''
+    
+    foo = make_cov_df(covariates, dist, n_patients)
+    
+    foo = add_cure_label(test_model_weights, foo, covariates)
+    
+    foo = add_intercept(foo)
+    
+    foo = add_nscar_cens_indicator(nscar_weights, foo, covariates)
+    
+    foo = add_nscar_censoring_indicator(foo)
+    
+    return foo[['x1', 'x2', 'x3', 'cure_label', 'int', 'nscar_censoring_indicator']]
 
 
 def make_inputs(df, indicator, cols):
