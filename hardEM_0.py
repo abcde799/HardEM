@@ -18,10 +18,10 @@ n.kosovalic@gmail.com
 
 '''
 
-import numpy as np
+
 from scipy.optimize import minimize
 import autograd.numpy as np
-from autograd import grad, jacobian, hessian
+from autograd import grad
 import pandas as pd
 from autograd import grad
 from sklearn.cluster import KMeans
