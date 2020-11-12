@@ -39,7 +39,12 @@ def susc_survival(time, covariate_vector, scaling, shape, gamma):
     
     arg = (-(time/scaling)**shape)*(covariate_exp(covariate_vector, gamma))
     
-    assert np.exp(arg)>=0,"Output of 'susc_survival' is not a nonnegative number."
+    assert np.exp(arg)>=0, "arg is {}. Output of 'susc_survival' is not a nonnegative number".format(arg)
+
+       
+    
+    #"Output of 'susc_survival' is not a nonnegative number."
+    
     
     return np.exp(arg)
     
@@ -70,7 +75,7 @@ def prob_density(time, prob, covariate_vector, scaling, shape, gamma):
     
     assert time>0, 'time<=0' 
     assert (0<=prob<=1), 'prob out of [0,1]' 
-    assert scaling>0, 'scalring not positive'
+    assert scaling>0, 'scaling not positive'
     assert shape>0, 'shape not positive'
     
     #assert out>0, "Output of prob_density is not positive" 
@@ -124,8 +129,8 @@ def survival_fit(censored_inputs, noncensored_inputs, C, maxiter):
     
     ----------------------------
     
-    censored_inputs: Am array consisting of censored inputs of the form [time, prob, covariates].
-    E.g. array([1, 0.5, [1.4,2.3,5.2]]).
+    censored_inputs: An array consisting of censored inputs of the form [time, prob, covariates].
+    E.g. [[1, 0.5, [1.4,2.3,5.2]],...].
     
     noncensored_inputs: Same as above except these represent the noncensored rows. The number of covariates is the same as above, but we
     could have a different number of samples. 
@@ -169,7 +174,7 @@ def survival_fit(censored_inputs, noncensored_inputs, C, maxiter):
     
     bnds = (b,b)+tuple((None,None) for x in range(length-2)) #The covariate vector components do not need to be positive. 
     
-    guess = np.random.uniform(low=0.1, high=1.0, size=length)
+    guess = np.random.uniform(low=0.1, high=0.9, size=length)
 
     res = minimize(training_loss, guess, method='SLSQP', jac=training_gradient, bounds=bnds, options={'maxiter': maxiter})
 
@@ -178,9 +183,23 @@ def survival_fit(censored_inputs, noncensored_inputs, C, maxiter):
     
     return model_weights
     
-
+def survival_fit_weights(censored_inputs, noncensored_inputs, C, maxiter):
     
-def prepare_data:
+    ''' 
+    Same inputs and outputs as survival_fit. Due to bugs with Autograd, we need to keep running survival_fit until it outputs correctly. 
+    '''
+    result = None
+    while result is None:
+        try:
+        
+            result = survival_fit(censored_inputs, noncensored_inputs, 0.5, 100)
+        
+        except:
+            
+            pass
+    return result
+
+def prepare_data(x):
 
    '''
    We will prepare survival data so it can be fed into the survival fit function. 

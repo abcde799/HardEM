@@ -223,7 +223,41 @@ def make_inputs(df, indicator, cols):
     
     return inputs
 
-
+def make_inputs_survival(df, indicator, cols):
+    
+    '''Creates numpy array of rows of either censored (0) or noncensored rows (1) depending on indicator, by extracting rows whose
+    censoring indicator is zero and rows whose censoring indicator is 1.
+    
+    
+    Parameters:
+    
+    ----------------------------------------
+    
+    df: A dataframe of shape (n_samples, n_covariates)
+    
+    indicator: Either 0 meaning censored, or 1 meaning noncensored.
+    
+    cols: The list of columns to be dropped. Usually cols = ['censoring_indicator', 'cure_label']
+    
+    Returns:
+    
+    
+    -----------------------------------------
+    
+    The output is a numpy array of rows which are either the censored rows, in case the indicator parameter was selected as 0, or 
+    otherwise the noncensored rows.
+    
+    '''
+    
+    first = cols[0]
+    
+    new_df = df[df[first]==indicator]
+    
+    drop_labels = new_df.drop(columns=cols)
+    
+    inputs = drop_labels.to_numpy()
+    
+    return inputs
 
 
 
