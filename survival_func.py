@@ -121,7 +121,7 @@ def mod_overall_survival(Array, param):
     
     return out
     
-def survival_fit(censored_inputs, noncensored_inputs, C, maxiter):
+def survival_fit_weights(censored_inputs, noncensored_inputs, C, maxiter):
     '''
     Minimize the negative log of MLE to get gamma, the covariate weight vector. See Eq 19 in paper.
     
@@ -183,7 +183,7 @@ def survival_fit(censored_inputs, noncensored_inputs, C, maxiter):
     
     return model_weights
     
-def survival_fit_weights(censored_inputs, noncensored_inputs, C, maxiter):
+def survival_fit(censored_inputs, noncensored_inputs, C, maxiter):
     
     ''' 
     Same inputs and outputs as survival_fit. Due to bugs with Autograd, we need to keep running survival_fit until it outputs correctly. 
@@ -192,20 +192,14 @@ def survival_fit_weights(censored_inputs, noncensored_inputs, C, maxiter):
     while result is None:
         try:
         
-            result = survival_fit(censored_inputs, noncensored_inputs, 0.5, 100)
+            result = survival_fit_weights(censored_inputs, noncensored_inputs, 0.5, 100)
         
         except:
             
             pass
     return result
 
-def prepare_data(x):
 
-   '''
-   We will prepare survival data so it can be fed into the survival fit function. 
-   In particular this means importing labels from the Hard EM algo to get the probabilities of being cured.
-   '''   
-   pass
     
     
     
