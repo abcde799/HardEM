@@ -3,9 +3,10 @@
 
 from scipy.optimize import minimize
 import autograd.numpy as np
-from autograd import grad, jacobian, hessian
+from autograd import grad, hessian
 import pandas as pd
 from autograd import grad
+from numpy.linalg import inv
 
 
 def covariate_exp(covariate_vector, gamma):
@@ -78,7 +79,7 @@ def prob_density(time, prob, covariate_vector, scaling, shape, gamma):
     assert scaling>0, 'scaling not positive'
     assert shape>0, 'shape not positive'
     
-    #assert out>0, "Output of prob_density is not positive" 
+   
     
     return out
     
@@ -143,7 +144,7 @@ def survival_fit_weights(censored_inputs, noncensored_inputs, C, maxiter):
     
     ---------------------------------
     
-    Weights: [shape, scaling, gamma], which is flat array where gamma is the covaraite vector weights. 
+    Weights: [scaling, shape, gamma], which is flat array where gamma is the covaraite vector weights. 
     ''' 
     n_cens = len(censored_inputs)
     n_noncens = len(noncensored_inputs)
@@ -152,9 +153,9 @@ def survival_fit_weights(censored_inputs, noncensored_inputs, C, maxiter):
     def training_loss(flatparam):
     
       
-        arr = flatparam[2:]
+        arr = flatparam[2:] #gamma
 
-        param = [flatparam[0], flatparam[1], arr]
+        param = [flatparam[0], flatparam[1], arr] #[scaling, shape, gamma]
        
         #Training loss is the negative log-likelihood.
         
@@ -166,7 +167,7 @@ def survival_fit_weights(censored_inputs, noncensored_inputs, C, maxiter):
         
     training_gradient = grad(training_loss)
 
-    
+    hess = hessian(training_loss)
     
     length = len((censored_inputs[0])[2])+2 
 
@@ -180,28 +181,39 @@ def survival_fit_weights(censored_inputs, noncensored_inputs, C, maxiter):
 
     model_weights = res.x
     
+    observed_information_matrix = hess(model_weights)
     
-    return model_weights
+    stand_errors = np.sqrt((1/n_rows)*(inv(observed_information_matrix).diagonal())) 
     
-def survival_fit(censored_inputs, noncensored_inputs, C, maxiter):
+    
+    return model_weights, stand_errors
+    
+def survival_fit(censored_inputs, noncensored_inputs, C, maxiter, standard_errors=False):
     
     ''' 
-    Same inputs and outputs as survival_fit. Due to bugs with Autograd, we need to keep running survival_fit until it outputs correctly. 
+    Same inputs and outputs as survival_fit_weights. Due to bugs with Autograd, we need to keep running survival_fit until it outputs correctly. 
     '''
     result = None
     while result is None:
+        
         try:
         
-            result = survival_fit_weights(censored_inputs, noncensored_inputs, 0.5, 100)
+            result = survival_fit_weights(censored_inputs, noncensored_inputs, C, 100)
         
         except:
             
             pass
-    return result
+            
+    if standard_errors:
+        
+        return result    
+    
+    else: 
+        
+        return result[0]
 
 
-    
-    
+        
     
         
             
