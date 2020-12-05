@@ -181,9 +181,9 @@ def survival_fit_weights(censored_inputs, noncensored_inputs, C, maxiter):
 
     model_weights = res.x
     
-    observed_information_matrix = hess(model_weights)
+    observed_information_matrix = n_rows*hess(model_weights)
     
-    stand_errors = np.sqrt((1/n_rows)*(inv(observed_information_matrix).diagonal())) 
+    stand_errors = np.sqrt(inv(observed_information_matrix).diagonal()) 
     
     
     return model_weights, stand_errors
