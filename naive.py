@@ -5,15 +5,8 @@ doing this by using the 'initialize' parameter.
 
 '''
 
-
-
-
 import numpy as np
-import pandas as pd
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import roc_auc_score
-from make_df import create_df, make_inputs
 from sklearn.cluster import KMeans
 from hardEM_0 import vswap, dist, HEM_labels_fit
 
