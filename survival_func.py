@@ -1,11 +1,8 @@
 
 
-
 from scipy.optimize import minimize
 import autograd.numpy as np
 from autograd import grad, hessian
-import pandas as pd
-from autograd import grad
 from numpy.linalg import inv
 
 
@@ -181,14 +178,16 @@ def survival_fit_weights(censored_inputs, noncensored_inputs, C, maxiter):
 
     model_weights = res.x
     
+    log_likelihood = (-n_rows)*training_loss(model_weights)
+    
     observed_information_matrix = n_rows*hess(model_weights)
     
     stand_errors = np.sqrt(inv(observed_information_matrix).diagonal()) 
     
     
-    return model_weights, stand_errors
+    return model_weights, stand_errors, log_likelihood
     
-def survival_fit(censored_inputs, noncensored_inputs, C, maxiter, standard_errors=False):
+def survival_fit(censored_inputs, noncensored_inputs, C, maxiter, standard_errors=False, log_likelihood=False):
     
     ''' 
     Same inputs and outputs as survival_fit_weights. Due to bugs with Autograd, we need to keep running survival_fit until it outputs correctly. 
@@ -206,7 +205,11 @@ def survival_fit(censored_inputs, noncensored_inputs, C, maxiter, standard_error
             
     if standard_errors:
         
-        return result    
+        return result[0:2]
+
+    elif log_likelihood:
+        
+        return result[2]
     
     else: 
         
