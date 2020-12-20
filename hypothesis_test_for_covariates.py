@@ -1,5 +1,5 @@
 
-from make_df import make_inputs  # Custom module here #Custom module here
+from make_df import make_inputs  # Custom module here 
 from naive import naive_fit  # Custom module here
 from scipy.optimize import minimize
 import autograd.numpy as np
@@ -172,8 +172,21 @@ if __name__ == '__main__':
         return censored_inputs, noncensored_inputs, final
             
     
-    censored_inputs, noncensored_inputs, table = prepare_data(mel)
+    nc_arr = []
+    arr = []
+    for i in range(100):
+        
+        censored_inputs, noncensored_inputs, table = prepare_data(mel)
+        
+        nc_arr.append(nc_survival_fit(censored_inputs, noncensored_inputs, 4, 100))
+        
+        arr.append(survival_fit(censored_inputs, noncensored_inputs, 0, 100, log_likelihood=True))
     
-    print('no covariates log l.l. is {}'.format(nc_survival_fit(censored_inputs, noncensored_inputs, 4, 100)))
+    dic = {}
+    dic['no_covariates_log_likelihood'] = nc_arr
+    dic['covariates_log_likelihood'] = arr
+    
+    df = pd.DataFrame.from_dict(dic) 
+    df.to_csv('hyp. test. after 100 runs.csv', index=False)
 
-    print('covariates log l.l. is {}'.format(survival_fit(censored_inputs, noncensored_inputs, 0, 100, log_likelihood=True)))
+    
