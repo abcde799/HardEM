@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Dec 19 18:32:11 2020
-
-@author: macguyver011
-"""
 
 from make_df import make_inputs  # Custom module here #Custom module here
 from naive import naive_fit  # Custom module here
