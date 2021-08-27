@@ -6,4 +6,4 @@ This is an implementation of a 'Hard EM' algorithm designed for datasets coming 
 
 
 
-This is joint work of Nemanja Kosovalic (formerly University of South Alabama) with Sandip Barui - IIM Kozhikode. For any questions please contact Nemanja Kosovalic at n.kosovalic@gmail.com.
+This is joint work of Nemanja Kosovalic (formerly University of South Alabama) with Sandip Barui - IIM Kozhikode. For any questions please contact Nemanja Kosovalic at n.kosovalic@gmail.com. Published work available here: https://link.springer.com/article/10.1007/s00180-021-01140-0
